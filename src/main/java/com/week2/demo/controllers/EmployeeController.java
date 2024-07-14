@@ -1,6 +1,7 @@
 package com.week2.demo.controllers;
 
 import com.week2.demo.dto.EmployeeDTO;
+import com.week2.demo.exceptions.ResourceNotFoundException;
 import com.week2.demo.services.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -23,7 +25,9 @@ public class EmployeeController {
         Optional<EmployeeDTO> employeeDTO=employeeService.getEmployeeByID(id);
         return employeeDTO
                 .map(employeeDTO1 -> ResponseEntity.ok(employeeDTO1))
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(()-> {
+                    return new ResourceNotFoundException("Employee Not Found with id:" + id);
+                });
 //        EmployeeDTO employeeDTO=employeeService.getEmployeeByID(id);
 //        if(employeeDTO==null)return ResponseEntity.notFound().build();
 //        else return ResponseEntity.ok(employeeDTO);
@@ -37,7 +41,7 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.createEmployee(emp), HttpStatus.CREATED);
     }
     @PutMapping(path = "/{EmployeeId}")
-    public ResponseEntity<EmployeeDTO> updateEmployee(@RequestBody EmployeeDTO emp,@PathVariable(name = "EmployeeId") Long ID){
+    public ResponseEntity<EmployeeDTO> updateEmployee(@RequestBody @Valid EmployeeDTO emp,@PathVariable(name = "EmployeeId") Long ID){
         return ResponseEntity.ok(employeeService.updateEmployeeByID(emp,ID));
     }
     @DeleteMapping(path = "/{employeeId}")

@@ -2,6 +2,7 @@ package com.week2.demo.services;
 
 import com.week2.demo.dto.EmployeeDTO;
 import com.week2.demo.entities.EmployeeEntity;
+import com.week2.demo.exceptions.ResourceNotFoundException;
 import com.week2.demo.repositories.EmployeeRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.util.ReflectionUtils;
@@ -42,25 +43,24 @@ public class EmployeeService {
 
 
     public EmployeeDTO updateEmployeeByID(EmployeeDTO emp, Long employeeId) {
+        isEmployeeExistById(employeeId);
         EmployeeEntity empEntity=modelMapper.map(emp,EmployeeEntity.class);
         empEntity.setId(employeeId);
         EmployeeEntity savedEmployee=employeeRepository.save(empEntity);
         return modelMapper.map(savedEmployee,EmployeeDTO.class);
     }
-    public Boolean isEmployeeExistById(Long id){
-        return employeeRepository.existsById(id);
+    public void isEmployeeExistById(Long id){
+        if(!employeeRepository.existsById(id))throw new ResourceNotFoundException("Employee Not Found");
     }
 
     public Boolean deleteEmployeeById(Long id) {
-         Boolean exists=isEmployeeExistById(id);
-         if(!exists)return false;
+         isEmployeeExistById(id);
          employeeRepository.deleteById(id);
          return true;
     }
 
     public EmployeeDTO updatePartialEmployeeById(Long employeeId, Map<String,Object> updates) {
-        Boolean exists = isEmployeeExistById(employeeId);
-        if(!exists)return null;
+        isEmployeeExistById(employeeId);
         EmployeeEntity empEntity=employeeRepository.findById(employeeId).get();
         updates.forEach((field,value)->{
             Field fieldToBeUpdated= ReflectionUtils.findRequiredField(EmployeeEntity.class, field);
